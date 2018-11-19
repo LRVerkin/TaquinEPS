@@ -16,13 +16,13 @@ class EcoAgent:
         
         self.goal = goal
         self.state  = "" #satisfied or not
-        self.acquintances = [] #tiles surrounding this one
+        self.acquaintances = [] #tiles surrounding this one
         self.env = env
         self.place = place #its place on the board
         self.hasPredator = False #has it been attacked?
 
-    def acquintancesPerception(self):
-        self.env.getAcquintances(self.placePerception)
+    def acquaintancesPerception(self):
+        return self.env.getAcquaintances(self.placePerception())
         
 
     def updateState(self):
@@ -41,8 +41,29 @@ class EcoAgent:
         
     def isAttacked(self):
         self.hasPredator = True
+
+    def moveTo(self,movement):
+        #movement contains a tuple (x,y) 
+        # where x = deplacement on x-axis (-1,0,1)
+        # and y = deplacement on y-axis
+        self.place.occupationChange()
+        print("previous position",self.place.position)
+        print("change by",movement)
+        self.env.grid[1,self.place.position[0],self.place.position[1]] = None
+        self.place = self.env.grid[0,self.place.position[0]+movement[0],self.place.position[1]+movement[1]]
+        self.env.grid[1,self.place.position[0],self.place.position[1]] = self
+        print("next position",self.place.position)
+        self.place.occupationChange()
+
         
-    #def tryEscape(self):
+    def tryEscape(self):
+        directions = {'up':(-1,0),'down':(1,0),'left':(0,-1),'right':(0,1)}
+        self.acquaintances = self.acquaintancesPerception()
+        for direction, tile in self.acquaintances.items():
+            if tile == None:
+                escapeTo = directions[direction]
+                self.moveTo(escapeTo)
+
         
         
         
@@ -53,6 +74,9 @@ class Place:
         self.position = position #tuple (x,y)
         self.occupied = occupied #if a Place has a tile on it
         self.number = taille*self.position[0] + self.position[1]+1
+
+    def occupationChange(self):
+        self.occupied = 1-self.occupied
         
 
 
@@ -86,8 +110,8 @@ class Environnement:
                 self.grid[1, i, j] = EcoAgent(self.numbers[i,j]+1, self.grid[0, i, j], self)
         
         #we randomly delete an EcoAgent so others will have room to move around
-        rdtuple =  (np.random.choice(range(taille)), np.random.choice(range(taille)))
-        print(rdtuple)
+        #rdtuple =  (np.random.choice(range(taille)), np.random.choice(range(taille)))
+        rdtuple = (1,1)
         self.grid[1, rdtuple[0],rdtuple[1]] = None
         self.grid[0, rdtuple[0],rdtuple[1]].occupied = False
     
@@ -106,7 +130,7 @@ class Environnement:
             print(row)
         
     
-    def getAcquintances(self, placeNumber):
+    def getAcquaintances(self, placeNumber):
         x = self.positions[placeNumber][0]
         y = self.positions[placeNumber][1]
         acquaintances = {}
@@ -124,10 +148,13 @@ class Environnement:
               print("Sortie de la grille sur x")
         return acquaintances
 
-        
+
 
 e = Environnement()
 e.positions
 #e.getAcquintances(1)['up'].place.position
-print(e.getAcquintances(1))
+print(e.getAcquaintances(2))
+e.show()
+e.getAcquaintances(1)['right'].tryEscape()
+print("change")
 e.show()
