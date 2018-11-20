@@ -114,5 +114,5 @@ class Environnement:
 e = Environnement()
 e.positions
 #e.getAcquintances(1)['up'].place.position
-print(e.getAcquintances(1))
+print(e.getAcquintances(8))
 e.show()
