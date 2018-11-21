@@ -74,13 +74,27 @@ class Patch:
             # self.blankWave for all Patches
         
 
-    def ManhattanWave(self,tile,start):
-        acquaintances = env.getAcquaintances(self.number)
-        for patch in acquaintances:
-            if patch == tile.state:
-                return 
+    def ManhattanBlank(self,tile,start):
+        ''' update self.blankWave so it will contain
+        distance from this Patch to current blank Patch
+        '''
+        acquaintances = self.env.getAcquaintances(self.number)
+        #if blank Patch has changed, turn self.BlankNode back to None
+        self.MBToNone()
+
+
+    def MBToNone(self):
+        self.blankWave = None
+        acquaintances = self.env.getAcquaintances(self.number)
+        for direction,ac in acquaintances:
+            if ac.blankWave != None:
+                ac.MBToNone()
+        
 
     def ManhattanGoal(self,askingPatch,finalGoal,start):
+        '''update self.goalWaves so this Patch contains 
+        Manhattan distance from finalGoal
+        '''
         acquaintances = self.env.getAcquaintances(self.number) #neighbour patches
         print("at patch",self.position)
         empty_ac = []
