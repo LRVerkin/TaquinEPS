@@ -68,25 +68,38 @@ class Patch:
 
     def occupationChange(self):
         self.occupied = 1-self.occupied
-        if self.occupied = False: #if this is now the blank Patch
+        if not self.occupied: #if this is now the blank Patch
             print("you still have to do the Manhattan distance from the blank Patch!")
             #need to code a function that will send a Manhattan wave to update
             # self.blankWave for all Patches
         
 
-    def ManhattanBlank(self,tile,start):
+    def ManhattanBlank(self,distance):
         ''' update self.blankWave so it will contain
         distance from this Patch to current blank Patch
         '''
+
         acquaintances = self.env.getAcquaintances(self.number)
+
+        if not self.occupied:
+            self.MBToNone()
+            self.blankWave = 0
+
+
         #if blank Patch has changed, turn self.BlankNode back to None
-        self.MBToNone()
+
+        #now propagate distance from new blank Patch
+        for direction,ac in acquaintances.items():
+            if ac.getBlankWave() == None or ac.getBlankWave()>distance+1:
+                ac.updateBlankWave(distance+1)
+                ac.ManhattanBlank(distance+1)
+
 
 
     def MBToNone(self):
         self.blankWave = None
         acquaintances = self.env.getAcquaintances(self.number)
-        for direction,ac in acquaintances:
+        for direction,ac in acquaintances.items():
             if ac.blankWave != None:
                 ac.MBToNone()
         
@@ -96,7 +109,6 @@ class Patch:
         Manhattan distance from finalGoal
         '''
         acquaintances = self.env.getAcquaintances(self.number) #neighbour patches
-        print("at patch",self.position)
         empty_ac = []
         for direction,ac in acquaintances.items():
             if finalGoal not in ac.getGoalWaves().keys(): #if this acquaintance hasn't been reached by the wave
@@ -109,12 +121,18 @@ class Patch:
                 ac.ManhattanGoal(askingPatch,finalGoal,start+1)
 
 
+
+    def getBlankWave(self):
+        return self.blankWave
+
     def getGoalWaves(self):
         return self.goalWaves
 
     def updateGoalWaves(self,goal,value):
         self.goalWaves[goal] = value
 
+    def updateBlankWave(self,value):
+        self.blankWave = value
 
 
 
@@ -168,7 +186,7 @@ class Environnement:
             row = '|'
             for j in range(self.taille):
                 if self.grid[1,i,j] != None:
-                    row += ' '+str(self.grid[1,i,j].goal)+'  | '
+                    row += ' '+str(self.grid[1,i,j].goal.number)+'  | '
                 else :
                     row += '    | '
             print(row)
@@ -204,9 +222,21 @@ e.positions
 # e.show()
 # e.getAcquaintances(1)['right'].tryEscape()
 # print("change")
-# e.show()
+e.show()
 
-goal = e.grid[1,0,0].goal
-print("but de l'agent en haut a gauche est",goal.position)
-e.grid[1,0,0].ManhattanDistanceGoal()
-print(e.grid[0,1,0].goalWaves[goal.number])
+
+# #testing ManhattanGoal
+# goal = e.grid[1,0,0].goal
+# print("but de l'agent en haut a gauche est",goal.position)
+# e.grid[1,0,0].ManhattanDistanceGoal()
+# print(e.grid[0,1,0].goalWaves[goal.number])
+
+# #testing MBTonNone
+# patch = e.grid[0,0,0]
+# patch.MBToNone()
+# print(e.grid[0,2,1].blankWave)
+
+# #testing ManhattanBlank
+# blank = e.grid[0,1,1]
+# blank.ManhattanBlank(0)
+# print(e.grid[0,2,2].blankWave)
