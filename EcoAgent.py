@@ -46,18 +46,17 @@ class EcoAgent:
         #movement contains a tuple (x,y) 
         # where x = deplacement on x-axis (-1,0,1)
         # and y = deplacement on y-axis
-        self.place.occupationChange()
-        print("previous position",self.place.position)
-        print("change by",movement)
-        self.env.grid[1,self.place.position[0],self.place.position[1]] = None
+        self.place.occupationChange() #current place is not occupied anymore
+        self.env.grid[1,self.place.position[0],self.place.position[1]] = None #this EcoAgent is removed from this position in env
         self.place = self.env.grid[0,self.place.position[0]+movement[0],self.place.position[1]+movement[1]]
-        self.env.grid[1,self.place.position[0],self.place.position[1]] = self
-        print("next position",self.place.position)
-        self.place.occupationChange()
+        # place is updated to new place
+        self.env.grid[1,self.place.position[0],self.place.position[1]] = self #this EcoAgent is now on its new place
+        self.place.occupationChange() #current place is now occupied
 
         
     def tryEscape(self):
         directions = {'up':(-1,0),'down':(1,0),'left':(0,-1),'right':(0,1)}
+        while 
         self.acquaintances = self.acquaintancesPerception()
         for direction, tile in self.acquaintances.items():
             if tile == None:
