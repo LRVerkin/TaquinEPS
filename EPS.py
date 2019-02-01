@@ -58,7 +58,7 @@ class Tile:
     def flee(self,constraints,initiator):
 
 
-        print("#### entered flee with constraints:")
+        print("Tile ",self.goal.number," #### entered flee with constraints:")
         print([p.number for p in constraints])
         self.cur_patch.env.show()
         print("Tile ",self.goal.number,"on Patch",self.cur_patch.number,"needs to flee!")
@@ -70,6 +70,7 @@ class Tile:
         destinations_blank = self.cur_patch.closestNeighbToBlank('all',constraints)
         if len(destinations_blank) == 0:
             print("in flee: no destinations_blank left!")
+            return
         #print("destinations closest to blank for tile ",self.goal.number," are patches:")
         #print([p.number for p in destinations_blank])
         # 2) if goal patch of current tile is in remaining patches: choose it
@@ -128,7 +129,10 @@ class Tile:
         print("#### entered satisfactionAggression with constraints")
         print([p.number for p in constraints])
         destination_patch.attackTile(constraints,self)
-        initiator.trySatisfaction(self.goal.env.prior_satisf)
+        if self.goal.env.prior_satisf != None:
+            initiator.trySatisfaction([self.goal.env.prior_satisf])
+        else:
+            initiator.trySatisfaction([])
 
     # FLEE BEHAVIOURS
 
