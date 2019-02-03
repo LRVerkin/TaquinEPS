@@ -23,6 +23,8 @@ class Tile:
         If it can't: attack other tiles
         """
 
+
+
         print("#### entered trySatisfaction with constraints:")
         print([p.number for p in constraints_])
 
@@ -63,8 +65,8 @@ class Tile:
         Tile tries to flee an attack from another Tile
         """
 
-        #print("Tile ",self.goal.number," #### entered flee with constraints:")
-        #print([p.number for p in constraints])
+        print("Tile ",self.goal.number," #### entered flee with constraints:")
+        print([p.number for p in constraints])
         #self.cur_patch.env.show()
         #print("Tile ",self.goal.number,"on Patch",self.cur_patch.number,"needs to flee!")
         # 1) remove from possible patches the ones given as constraints
@@ -72,10 +74,15 @@ class Tile:
         #         self.ManhattanDistanceGoal()
         # if self.cur_patch.env.prior_satisf != None:
         #     constraints.append(self.cur_patch.env.prior_satisf)
+
+
         destinations_blank = self.cur_patch.closestNeighbToBlank('all',constraints)
         if len(destinations_blank) == 0:
-            print("in flee: no destinations_blank left!")
-            destinations_blank.append(self.cur_patch.env.prior_satisf)
+            if (len(constraints) < 2 or (len(constraints) > 1 and self.cur_patch.env.prior_satisf in constraints)):
+                print("in flee: no destinations_blank left!")
+                destinations_blank.append(self.cur_patch.env.prior_satisf)
+            else:
+                return
             #initiator.fleeAggression()
             
 
@@ -93,10 +100,11 @@ class Tile:
             destination_patch = np.random.choice(destinations)
          
         while not destination_patch.isFree():
-            constraints_ = [self.cur_patch]
-            if self.cur_patch.env.prior_satisf != None:
-                constraints_.append(self.cur_patch.env.prior_satisf)
-            self.fleeAggression(destination_patch,constraints_)
+            #constraints_ = [self.cur_patch]
+            constraints.append(self.cur_patch)
+            if self.cur_patch.env.prior_satisf != None and self.cur_patch.env.prior_satisf not in constraints:
+                constraints.append(self.cur_patch.env.prior_satisf)
+            self.fleeAggression(destination_patch,constraints)
 
         self.doFlee(destination_patch)
         if destination_patch == self.goal:
@@ -125,7 +133,8 @@ class Tile:
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
-        self.cur_patch.env.show()
+        if display == True:
+            self.cur_patch.env.show()
 
 
 
@@ -137,6 +146,7 @@ class Tile:
 
         print("#### entered satisfactionAggression with constraints")
         print([p.number for p in constraints])
+        constraints.append(self.cur_patch)
         destination_patch.attackTile(constraints,self)
 
         print("SATISFAGG : went after attackTile, now gonna call trySatisf on tile ",initiator.goal.number)
@@ -157,6 +167,7 @@ class Tile:
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
+
         if self.isSatisfied():
             self.cur_patch.env.changePriorSatisf(self.cur_patch)
         self.cur_patch.env.show()
@@ -167,8 +178,9 @@ class Tile:
         attack tile on destination_patch
         """
 
-        #print("#### entered fleeAggression with constraints:")
-        #print([p.number for p in constraints])
+        print("#### entered fleeAggression with constraints:")
+        print([p.number for p in constraints])
+        constraints.append(self.cur_patch)
         destination_patch.attackTile(constraints,self)
 
 
@@ -314,12 +326,18 @@ class Patch:
                 ac.ManhattanBlank(distance+1)
 
 
+    # def MBToNone(self):
+    #     print("calling MBToNone on patch ",self.number)
+    #     self.blankWave = None
+    #     acquaintances = self.env.getAcquaintances(self.number)
+    #     for direction,ac in acquaintances.items():
+    #         if ac.blankWave != None:
+    #             print("not None for Patch",self.number)
+    #             ac.blankWave = None
+    #             ac.MBToNone()
+
     def MBToNone(self):
-        self.blankWave = None
-        acquaintances = self.env.getAcquaintances(self.number)
-        for direction,ac in acquaintances.items():
-            if ac.blankWave != None:
-                ac.MBToNone()
+        self.env.MBToNoneEnv()
         
 
     # def ManhattanGoal(self,askingPatch,finalGoal,start):
@@ -411,7 +429,7 @@ class Environnement:
     def __init__(self, taille = 3):
         
         self.taille = taille
-        self.grid = np.empty((taille, taille), dtype = object) #2 2D grids, grid[0] contains Places, grid[1] contains EcoAgents
+        self.grid = np.empty((taille, taille), dtype = object)
         #self.numbers will be used to assign random goal numbers to EcoAgents
         #self.numbers = np.copy(np.random.choice(taille**2, taille**2, replace = False))
         #self.numbers.resize((taille, taille))
@@ -478,6 +496,15 @@ class Environnement:
 
         print()
 
+    def victory(self):
+        for i in range(self.taille):
+            for j in range(self.taille):
+                if self.grid[i,j].tile != None:
+                    if self.grid[i,j].tile.goal.number != self.grid[i,j].number:
+                        return False
+                    print(self.grid[i,j].tile.goal.number," is right")
+        print("It's a win!")
+        exit()
 
     def changePriorSatisf(self,patch):
         print("################ new prior_satisf is",patch.number,"#####################")
@@ -501,6 +528,7 @@ class Environnement:
         """ 
         returns patch that is further from blank patch
         """
+        self.victory()
         max_dist = 0
         for i in range(self.taille):
             for j in range(self.taille):
@@ -535,6 +563,11 @@ class Environnement:
 
         return acquaintances
 
+    def MBToNoneEnv(self):
+        for i in range(self.taille):
+            for j in range(self.taille):
+                self.grid[i,j].blankWave = None
+
 
 
 
@@ -551,10 +584,9 @@ e = Environnement()
 
 e.show_grid()
 e.show()
-'''e.grid[0,0].tile.trySatisfaction()
+e.grid[0,0].tile.trySatisfaction()
 print()
 e.show()
-'''
 
 # #testing ManhattanGoal
 # print("test of ManhattanGoal")
