@@ -114,14 +114,14 @@ class Tile:
 
     # SATISFATION BEHAVIOURS 
 
-    def doSatisfaction(self,destination_patch):
-        """
+    def doSatisfaction(self,destination_patch, display=True):
+        '''
         tile moves on destination patch
         update destination patch to say it now has a tile
-        """
-
-        print("#### entered doSatisfaction")
-        print(self.goal.number," is moving to patch ",destination_patch.number)
+        '''
+        if display:
+            print("#### entered doSatisfaction")
+            print(self.goal.number," is moving to patch ",destination_patch.number)
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
@@ -170,11 +170,6 @@ class Tile:
         #print("#### entered fleeAggression with constraints:")
         #print([p.number for p in constraints])
         destination_patch.attackTile(constraints,self)
-
-
-
-
-
 
 
     def ManhattanDistanceGoal(self):
@@ -418,11 +413,11 @@ class Environnement:
         self.taille = taille
         self.grid = np.empty((taille, taille), dtype = object) #2 2D grids, grid[0] contains Places, grid[1] contains EcoAgents
         #self.numbers will be used to assign random goal numbers to EcoAgents
-        self.numbers = np.copy(np.random.choice(taille**2, taille**2, replace = False))
-        self.numbers.resize((taille, taille))
+        #self.numbers = np.copy(np.random.choice(taille**2, taille**2, replace = False))
+        #self.numbers.resize((taille, taille))
 
-        #self.places = np.array(range(1,taille**2+1))
-        #self.places.resize((taille, taille))
+        self.places = np.array(range(1,taille**2+1))
+        self.places.resize((taille, taille))
         
         #prior satisfied tile (for constraints)
         self.prior_satisf = None
@@ -437,27 +432,28 @@ class Environnement:
 
         for i in range(self.grid.shape[0]):
             for j in range(self.grid.shape[1]):
-                if self.numbers[i,j] != 0:       
-                    goal = self.positions[self.numbers[i,j]]
+                if self.places[i,j] != taille**2:
+                    goal = self.positions[self.places[i,j]]
                     self.grid[i, j].occupationChange(Tile(self.grid[goal[0],goal[1]], self.grid[i, j]))
                 else:
                     self.blankPatch = self.grid[i,j]
-        
-        #we randomly delete an EcoAgent so others will have room to move around
-        #rdtuple =  (np.random.choice(range(taille)), np.random.choice(range(taille)))
-        # rdtuple = (0,0)
-        # self.grid[rdtuple[0],rdtuple[1]].occupationChange()
-        #self.grid[0, rdtuple[0],rdtuple[1]].occupied = None
-        # ^ line above this one should take care of it, we'll see
-        
-        self.show()
+
+        self.shuffle()
+    
+    def shuffle(self, T=1000):
+        '''
+        shuffles the tiles on the grid to have a random solvable configuration
+        '''
+        print("shuffling the grid...")
+        for t in range(T):
+            target = np.random.choice(list(self.getAcquaintances(self.blankPatch.number).values()), 1)[0]
+            target.tile.doSatisfaction(self.blankPatch, display=False)
 
 
     def show_grid(self):
         """
         show the Patches over the grid
         """
-
         print("Reminder of original grid:")
         for i in range(self.taille):
             row = '|'
@@ -516,9 +512,6 @@ class Environnement:
                     furth = self.grid[i,j]
         return furth
 
-
-
-
     def getAcquaintances(self, placeNumber):
         """
             returns PATCHES (not Tiles)
@@ -549,18 +542,19 @@ class Environnement:
 ##########################################################
 
 e = Environnement()
-e.positions
+#e.positions
 #e.getAcquintances(1)['up'].place.position
 # print(e.getAcquaintances(2))
 # e.show()
 # e.getAcquaintances(1)['right'].tryEscape()
 # print("change
+
 e.show_grid()
-
-e.grid[0,0].tile.trySatisfaction()
-
+e.show()
+'''e.grid[0,0].tile.trySatisfaction()
 print()
 e.show()
+'''
 
 # #testing ManhattanGoal
 # print("test of ManhattanGoal")
