@@ -125,9 +125,9 @@ class Tile:
         tile moves on destination patch
         update destination patch to say it now has a tile
         '''
-        if display:
-            print("#### entered doSatisfaction")
-            print(self.goal.number," is moving to patch ",destination_patch.number)
+        # if display:
+        #     print("#### entered doSatisfaction")
+        #     print(self.goal.number," is moving to patch ",destination_patch.number)
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
@@ -138,12 +138,11 @@ class Tile:
         attack tile on destination_patch
         """
 
-        print("#### entered satisfactionAggression with constraints")
-        print([p.number for p in constraints])
+        # print("#### entered satisfactionAggression with constraints")
+        # print([p.number for p in constraints])
         constraints.append(self.cur_patch)
         destination_patch.attackTile(constraints,self)
 
-        print("SATISFAGG : went after attackTile, now gonna call trySatisf on tile ",initiator.goal.number)
         if self.goal.env.prior_satisf != None:
             initiator.trySatisfaction([self.goal.env.prior_satisf])
         else:
@@ -155,8 +154,8 @@ class Tile:
         """
         tile flees to destination_patch
         """
-        print("#### entered doFlee")
-        print(self.goal.number," is moving to patch ",destination_patch.number)
+        # print("#### entered doFlee")
+        # print(self.goal.number," is moving to patch ",destination_patch.number)
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
@@ -170,8 +169,8 @@ class Tile:
         attack tile on destination_patch
         """
 
-        print("#### entered fleeAggression with constraints:")
-        print([p.number for p in constraints])
+        # print("#### entered fleeAggression with constraints:")
+        # print([p.number for p in constraints])
         constraints.append(self.cur_patch)
         destination_patch.attackTile(constraints,self)
 
@@ -466,7 +465,6 @@ class Environnement:
                 if self.grid[i,j].tile != None:
                     if self.grid[i,j].tile.goal.number != self.grid[i,j].number:
                         return False
-                    print(self.grid[i,j].tile.goal.number," is right")
         print("It's a win!")
         exit()
         
