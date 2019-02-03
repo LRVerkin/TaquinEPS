@@ -18,12 +18,15 @@ class Tile:
     ##### KERNEL BEHAVIOURS (DOMAIN-INDEPENDENT) #####
 
     def trySatisfaction(self,constraints_ = []):
-
+        """
+        main behaviour: Tile tries to satisfy itself by moving to its goal patch.
+        If it can't: attack other tiles
+        """
 
         print("#### entered trySatisfaction with constraints:")
         print([p.number for p in constraints_])
 
-        self.cur_patch.env.show()
+        #self.cur_patch.env.show()
         if not self.isSatisfied():
             # find patches nearest its goal
 
@@ -40,8 +43,8 @@ class Tile:
             destination_patch = np.random.choice(destinations)
             while not destination_patch.isFree():
                 constraints_.append(self.cur_patch)
-                print("constraints for aggro of ",destination_patch.number,"by patch",self.cur_patch.number,"are:")
-                print([p.number for p in constraints_])
+                #print("constraints for aggro of ",destination_patch.number,"by patch",self.cur_patch.number,"are:")
+                #print([p.number for p in constraints_])
                 self.satisfactionAggression(destination_patch, constraints_,self)
 
             print("left while loop for tile ",self.goal.number)
@@ -56,12 +59,14 @@ class Tile:
             self.cur_patch.env.findNextUnsatisf()
 
     def flee(self,constraints,initiator):
+        """
+        Tile tries to flee an attack from another Tile
+        """
 
-
-        print("Tile ",self.goal.number," #### entered flee with constraints:")
-        print([p.number for p in constraints])
-        self.cur_patch.env.show()
-        print("Tile ",self.goal.number,"on Patch",self.cur_patch.number,"needs to flee!")
+        #print("Tile ",self.goal.number," #### entered flee with constraints:")
+        #print([p.number for p in constraints])
+        #self.cur_patch.env.show()
+        #print("Tile ",self.goal.number,"on Patch",self.cur_patch.number,"needs to flee!")
         # 1) remove from possible patches the ones given as constraints
         # if self.goal.number not in self.cur_patch.getGoalWaves().keys():
         #         self.ManhattanDistanceGoal()
@@ -70,7 +75,10 @@ class Tile:
         destinations_blank = self.cur_patch.closestNeighbToBlank('all',constraints)
         if len(destinations_blank) == 0:
             print("in flee: no destinations_blank left!")
-            return
+            destinations_blank.append(self.cur_patch.env.prior_satisf)
+            #initiator.fleeAggression()
+            
+
         #print("destinations closest to blank for tile ",self.goal.number," are patches:")
         #print([p.number for p in destinations_blank])
         # 2) if goal patch of current tile is in remaining patches: choose it
@@ -107,28 +115,31 @@ class Tile:
     # SATISFATION BEHAVIOURS 
 
     def doSatisfaction(self,destination_patch):
-        '''
+        """
         tile moves on destination patch
         update destination patch to say it now has a tile
-        '''
+        """
 
         print("#### entered doSatisfaction")
         print(self.goal.number," is moving to patch ",destination_patch.number)
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
+        self.cur_patch.env.show()
 
 
 
 
     def satisfactionAggression(self,destination_patch,constraints,initiator):
-        '''
+        """
         attack tile on destination_patch
-        '''
+        """
 
         print("#### entered satisfactionAggression with constraints")
         print([p.number for p in constraints])
         destination_patch.attackTile(constraints,self)
+
+        print("SATISFAGG : went after attackTile, now gonna call trySatisf on tile ",initiator.goal.number)
         if self.goal.env.prior_satisf != None:
             initiator.trySatisfaction([self.goal.env.prior_satisf])
         else:
@@ -137,9 +148,9 @@ class Tile:
     # FLEE BEHAVIOURS
 
     def doFlee(self,destination_patch):
-        '''
+        """
         tile flees to destination_patch
-        '''
+        """
 
         print("#### entered doFlee")
         print(self.goal.number," is moving to patch ",destination_patch.number)
@@ -148,14 +159,16 @@ class Tile:
         self.cur_patch.occupationChange(new_tile = self)
         if self.isSatisfied():
             self.cur_patch.env.changePriorSatisf(self.cur_patch)
+        self.cur_patch.env.show()
 
 
     def fleeAggression(self,destination_patch,constraints):
-        '''attack tile on destination_patch
-        '''
+        """
+        attack tile on destination_patch
+        """
 
-        print("#### entered fleeAggression with constraints:")
-        print([p.number for p in constraints])
+        #print("#### entered fleeAggression with constraints:")
+        #print([p.number for p in constraints])
         destination_patch.attackTile(constraints,self)
 
 
@@ -165,9 +178,9 @@ class Tile:
 
 
     def ManhattanDistanceGoal(self):
-        ''' 
+        """ 
         ask goal patch to send a Manhattan Wave to current patch
-        '''
+        """
         self.goal.ManhattanGoal(self.cur_patch,goal.number,0)
 
 
@@ -207,17 +220,17 @@ class Patch:
 
 
     def attackTile(self,constraints,initiator):
-        '''
+        """
         tells current tile to flee,
         gives it constraints aka patches to avoid
-        '''
+        """
         self.tile.flee(constraints,initiator)
 
 
     def closestNeighbToGoal(self,goal,chooseFrom,constraints = []):
-        '''
+        """
         returns list of patches that are closest to goal Patch
-        '''
+        """
         closest = []
         minDist = (self.taille-1)*2
         if chooseFrom == 'all':
@@ -246,9 +259,9 @@ class Patch:
         return closest
 
     def closestNeighbToBlank(self,chooseFrom,constraints = []):
-        '''
+        """
         returns list of patches that are closest to Blank Patch
-        '''
+        """
         closest = []
         minDist = (self.taille-1)*2
         if chooseFrom == 'all':
@@ -282,10 +295,10 @@ class Patch:
 
     ####### MANHATTAN METHODS #######
     def ManhattanBlank(self,distance = 0):
-        ''' 
+        """ 
         update self.blankWave so it will contain
         distance from this Patch to current blank Patch
-        '''
+        """
 
         #if blank Patch has changed, turn self.BlankNode back to None
         # if self.tile == None and distance == 0:
@@ -315,10 +328,10 @@ class Patch:
         
 
     # def ManhattanGoal(self,askingPatch,finalGoal,start):
-    #     '''
+    #     """
     #     update self.goalWaves so this Patch contains 
     #     Manhattan distance from finalGoal
-    #     '''
+    #     """
     #     print("## ANALYZING MANHATTANDISTANCE to goal ",finalGoal," for patch ",askingPatch.number)
     #     if finalGoal in askingPatch.getGoalWaves().keys():
     #             return ""
@@ -352,10 +365,10 @@ class Patch:
 
 
     def ManhattanGoal(self,askingPatch,finalGoal,start):
-        '''
+        """
         update self.goalWaves so this Patch contains 
         Manhattan distance from finalGoal
-        '''
+        """
 
         #print("## ANALYZING MANHATTANDISTANCE to goal ",finalGoal," for patch ",askingPatch.number)
 
@@ -396,9 +409,9 @@ class Patch:
 
 
 class Environnement:
-    ''' 
+    """ 
     class defining the board
-    '''
+    """
     
     def __init__(self, taille = 3):
         
@@ -437,12 +450,13 @@ class Environnement:
         #self.grid[0, rdtuple[0],rdtuple[1]].occupied = None
         # ^ line above this one should take care of it, we'll see
         
+        self.show()
 
 
     def show_grid(self):
-        '''
+        """
         show the Patches over the grid
-        '''
+        """
 
         print("Reminder of original grid:")
         for i in range(self.taille):
@@ -454,9 +468,9 @@ class Environnement:
         print()
 
     def show(self):
-        '''
+        """
         show the Tiles (identified by their goals) over the grid
-        '''
+        """
         for i in range(self.taille):
             row = '|'
             for j in range(self.taille):
@@ -474,6 +488,10 @@ class Environnement:
         self.prior_satisf = patch
 
     def findNextUnsatisf(self):
+        """
+        find unsatisfied Tile that is further from Blank Patch
+        calls trySatisfaction() on it
+        """
         nextToSat = self.furtherFromBlank().tile
         print("gonna call trySatisfaction on tile ",nextToSat.goal.number)
         if self.prior_satisf != None:
@@ -484,9 +502,9 @@ class Environnement:
     
 
     def furtherFromBlank(self):
-        ''' 
+        """ 
         returns patch that is further from blank patch
-        '''
+        """
         max_dist = 0
         for i in range(self.taille):
             for j in range(self.taille):
@@ -502,9 +520,10 @@ class Environnement:
 
 
     def getAcquaintances(self, placeNumber):
-        '''returns PATCHES (not Tiles)
+        """
+            returns PATCHES (not Tiles)
             around the Patch with placeNumber
-        '''
+        """
         x = self.positions[placeNumber][0]
         y = self.positions[placeNumber][1]
         acquaintances = {}
