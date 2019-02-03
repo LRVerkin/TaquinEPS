@@ -1,4 +1,5 @@
 import numpy as np
+from Display import displayBoard
 
 
 
@@ -23,7 +24,7 @@ class Tile:
         print("#### entered trySatisfaction with constraints:")
         print([p.number for p in constraints_])
 
-        self.cur_patch.env.show()
+        self.cur_patch.env.displayGame()
         if not self.isSatisfied():
             # find patches nearest its goal
 
@@ -55,12 +56,11 @@ class Tile:
         else:
             self.cur_patch.env.findNextUnsatisf()
 
-    def flee(self,constraints,initiator):
-
+    def flee(self, constraints, initiator):
 
         print("Tile ",self.goal.number," #### entered flee with constraints:")
         print([p.number for p in constraints])
-        self.cur_patch.env.show()
+        self.cur_patch.env.displayGame()
         print("Tile ",self.goal.number,"on Patch",self.cur_patch.number,"needs to flee!")
         # 1) remove from possible patches the ones given as constraints
         # if self.goal.number not in self.cur_patch.getGoalWaves().keys():
@@ -119,13 +119,10 @@ class Tile:
         self.cur_patch.occupationChange(new_tile = self)
 
 
-
-
     def satisfactionAggression(self,destination_patch,constraints,initiator):
         '''
         attack tile on destination_patch
         '''
-
         print("#### entered satisfactionAggression with constraints")
         print([p.number for p in constraints])
         destination_patch.attackTile(constraints,self)
@@ -140,7 +137,6 @@ class Tile:
         '''
         tile flees to destination_patch
         '''
-
         print("#### entered doFlee")
         print(self.goal.number," is moving to patch ",destination_patch.number)
         self.cur_patch.occupationChange(None)
@@ -351,7 +347,6 @@ class Patch:
         update self.goalWaves so this Patch contains 
         Manhattan distance from finalGoal
         '''
-
         #print("## ANALYZING MANHATTANDISTANCE to goal ",finalGoal," for patch ",askingPatch.number)
 
         if start == 0:
@@ -399,9 +394,6 @@ class Environnement:
         
         self.taille = taille
         self.grid = np.empty((taille, taille), dtype = object) #2 2D grids, grid[0] contains Places, grid[1] contains EcoAgents
-        #self.numbers will be used to assign random goal numbers to EcoAgents
-        #self.numbers = np.copy(np.random.choice(taille**2, taille**2, replace = False))
-        #self.numbers.resize((taille, taille))
 
         self.places = np.array(range(1,taille**2+1))
         self.places.resize((taille, taille))
@@ -434,35 +426,24 @@ class Environnement:
         for t in range(T):
             target = np.random.choice(list(self.getAcquaintances(self.blankPatch.number).values()), 1)[0]
             target.tile.doSatisfaction(self.blankPatch, display=False)
+        
+    def emptyGrid(self, width, height) :
+        grid = [[0] * height for i in range(width)]
+        return grid
 
-    def show_grid(self):
-        '''
-        show the Patches over the grid
-        '''
-        print("Reminder of original grid:")
-        for i in range(self.taille):
-            row = '|'
-            for j in range(self.taille):
-                row += ' '+str(self.grid[i,j].number)+'  | '
-            print(row)
-
-        print()
-
-    def show(self):
-        '''
-        show the Tiles (identified by their goals) over the grid
-        '''
-        for i in range(self.taille):
-            row = '|'
-            for j in range(self.taille):
-                if not self.grid[i,j].isFree():
-                    row += ' '+str(self.grid[i,j].tile.goal.number)+'  | '
-                else :
-                    row += '    | '
-            print(row)
-
-        print()
-
+    def displayGame(self):
+        grid = self.emptyGrid(self.taille, self.taille)
+        for i in range(len(grid)) :
+            for j in range(len(grid[0])):
+                grid[i][j] = 0 if self.grid[i,j].isFree() else self.grid[i,j].tile.goal.number
+        displayBoard(grid)
+        
+    def displayGrid(self):
+        grid = self.emptyGrid(self.taille, self.taille)
+        for i in range(len(grid)) :
+            for j in range(len(grid[0])):
+                grid[i][j] = self.grid[i,j].number
+        displayBoard(grid)
 
     def changePriorSatisf(self,patch):
         print("################ new prior_satisf is",patch.number,"#####################")
@@ -475,11 +456,9 @@ class Environnement:
             nextToSat.trySatisfaction([self.prior_satisf])
         else:
             nextToSat.trySatisfaction([])
-        
-    
 
     def furtherFromBlank(self):
-        ''' 
+        '''
         returns patch that is further from blank patch
         '''
         max_dist = 0
@@ -494,8 +473,9 @@ class Environnement:
         return furth
 
     def getAcquaintances(self, placeNumber):
-        '''returns PATCHES (not Tiles)
-            around the Patch with placeNumber
+        '''
+        returns PATCHES (not Tiles)
+        around the Patch with placeNumber
         '''
         x = self.positions[placeNumber][0]
         y = self.positions[placeNumber][1]
@@ -512,11 +492,7 @@ class Environnement:
                     acquaintances[directions[indice+2]] = self.grid[x,y+indice]
             except IndexError:
               True
-
         return acquaintances
-
-
-
 
 ##########################################################
 ##########################################################
@@ -530,11 +506,10 @@ e = Environnement()
 # print("change
 
 e.show_grid()
-e.show()
-'''e.grid[0,0].tile.trySatisfaction()
+e.displayGrid()
+e.displayGame()
+e.grid[0,0].tile.trySatisfaction()
 print()
-e.show()
-'''
 
 # #testing ManhattanGoal
 # print("test of ManhattanGoal")
