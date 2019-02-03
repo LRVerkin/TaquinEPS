@@ -131,8 +131,6 @@ class Tile:
         self.cur_patch.occupationChange(None)
         self.cur_patch = destination_patch
         self.cur_patch.occupationChange(new_tile = self)
-        if display == True:
-            self.cur_patch.env.show()
 
 
     def satisfactionAggression(self,destination_patch,constraints,initiator):
@@ -165,7 +163,6 @@ class Tile:
 
         if self.isSatisfied():
             self.cur_patch.env.changePriorSatisf(self.cur_patch)
-        self.cur_patch.env.show()
 
 
     def fleeAggression(self,destination_patch,constraints):
@@ -564,7 +561,6 @@ e = Environnement()
 # e.getAcquaintances(1)['right'].tryEscape()
 # print("change
 
-e.show_grid()
 e.displayGrid()
 e.displayGame()
 e.grid[0,0].tile.trySatisfaction()
